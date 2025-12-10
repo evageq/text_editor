@@ -1,0 +1,4 @@
+*.log
+*.out
+compile_commands.json
+.cache
