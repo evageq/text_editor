@@ -2,7 +2,6 @@
 #include "common.h"
 #include "window.h"
 
-
 static window_t
 create_window(window_params_t params)
 {
@@ -177,53 +176,3 @@ window_set_cursor(window_t *const window, int x, int y)
     window->cursor_pos_x = x;
     window->cursor_pos_y = y;
 }
-
-
-// inline size_t
-// get_tl_winx(window_t window)
-// {
-//     return 0;
-// }
-//
-// inline size_t
-// get_tl_winy(window_t window)
-// {
-//     return 0;
-// }
-//
-// inline size_t
-// get_tr_winx(window_t window)
-// {
-//     return 0;
-// }
-//
-// inline size_t
-// get_tr_winy(window_t window)
-// {
-//     return 0;
-// }
-//
-// inline size_t
-// get_bl_winx(window_t window)
-// {
-//     return 0;
-// }
-//
-// inline size_t
-// get_bl_winy(window_t window)
-// {
-//     return 0;
-// }
-//
-// inline size_t
-// get_br_winx(window_t window)
-// {
-//     return 0;
-// }
-//
-// inline size_t
-// get_br_winy(window_t window)
-// {
-//     return 0;
-// }
-//

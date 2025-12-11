@@ -41,15 +41,6 @@ typedef struct window_s
 
 typedef window_t window_params_t;
 
-size_t get_tl_winx(window_t window);
-size_t get_tl_winy(window_t window);
-size_t get_tr_winx(window_t window);
-size_t get_tr_winy(window_t window);
-size_t get_bl_winx(window_t window);
-size_t get_bl_winy(window_t window);
-size_t get_br_winx(window_t window);
-size_t get_br_winy(window_t window);
-
 int window_editor_init(window_t *windows);
 void window_set_cursor(window_t *const window, int x, int y);
 

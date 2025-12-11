@@ -14,7 +14,6 @@
 
 typedef struct render_s
 {
-
     editor_t *p_editor;
     bool valid;
 } render_t;
