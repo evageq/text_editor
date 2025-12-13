@@ -4,6 +4,8 @@ compile_commands.json
 .cache
 
 build/*
+project.tasks
+pvs.log.*
 
 text_editor
 
