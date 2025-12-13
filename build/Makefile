@@ -1,23 +1,12 @@
-export TOP_DIR=$(shell pwd)
-export BUILD_DIR=$(TOP_DIR)/build
-
-INCDIRS=.
-
 SRC = $(wildcard $(TOP_DIR)/*.c)
 OBJ = $(patsubst $(TOP_DIR)/%.c,$(BUILD_DIR)/%.o,$(SRC))
-DEPS = $(patsubst $(TOP_DIR)/%.c,$(BUILD_DIR)/%.d,$(SRC))
 
-BEAR_OPTS=--output $(TOP_DIR)
+BEAR_OPTS=-o $(TOP_DIR)
 BEAR=bear $(BEAR_OPTS) --
-
 CC=clang
 
 LDLIBS=-lncurses
 LDFLAGS=-fuse-ld=mold
-
-DEPFLAGS=-MP -MD
-COMPILE_SANITY_OPTS=-Wall -Wextra
-CFLAGS=-g $(foreach D,$(INCDIRS),-I$(D)) $(DEPFLAGS)
 
 FILE=$(TOP_DIR)/tmp
 ARGS=$(FILE)
@@ -42,5 +31,3 @@ bear: clean
 	@$(BEAR) $(MAKE) -C .
 
 .PHONY: all run clean bear
-
--include $(DEPS)
