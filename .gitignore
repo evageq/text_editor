@@ -2,3 +2,8 @@
 *.out
 compile_commands.json
 .cache
+
+build/*
+
+text_editor
+
