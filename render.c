@@ -56,8 +56,6 @@ render_window_text_area(render_t r)
     WINDOW *win = R_GET_NCURSE_WIN(r, WINDOW_TEXT_AREA);
     wmove(win, R_GET_WIN(r, WINDOW_TEXT_AREA).cursor_pos_y,
             R_GET_WIN(r, WINDOW_TEXT_AREA).cursor_pos_x);
-    // wmove(win, 10, 10);
-    wrefresh(win);
 
     return 0;
 }
@@ -65,8 +63,8 @@ render_window_text_area(render_t r)
 static int
 render_window_bottom_bar(render_t r)
 {
-    // R_DEFAULT_RENDER(r, WINDOW_BOTTOM_BAR);
-    // wrefresh(R_GET_NCURSE_WIN(r, WINDOW_BOTTOM_BAR));
+    WINDOW *win = R_GET_NCURSE_WIN(r, WINDOW_BOTTOM_BAR);
+    R_DEFAULT_RENDER(r, WINDOW_BOTTOM_BAR);
     return 0;
 }
 
@@ -100,8 +98,7 @@ render_window(render_t r, window_t window)
             }
         default:
             {
-                fprintf(stderr, "Unknown window type to render: %d\n",
-                        window.type);
+                debug("Unknown window type to render: %d", window.type);
                 ret = -1;
             }
     }

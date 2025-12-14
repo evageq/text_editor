@@ -31,7 +31,7 @@ ensure_windows_created(const window_t *windows)
     {
         if (windows[i].valid == FALSE)
         {
-            fprintf(stderr, "Failed to create %d window\n", i);
+            debug("Failed to ensure init %d window", i);
             ret = -1;
         }
     }
@@ -45,7 +45,7 @@ window_top_bar_init()
     int type = WINDOW_TOP_BAR;
 
     int h = WINDOW_TOP_BAR_HEIGHT;
-    int w = get_n_by_perc(WINDOW_BASE_WIDTH, 100);
+    int w = WINDOW_BASE_WIDTH;
 
     int startx = 0;
     int starty = 0;
@@ -72,7 +72,7 @@ window_text_area_init()
     int type = WINDOW_TEXT_AREA;
 
     int h = WINDOW_TEXT_AREA_HEIGHT;
-    int w = get_n_by_perc(WINDOW_BASE_WIDTH, 100);
+    int w = WINDOW_BASE_WIDTH;
 
     int startx = 0;
     int starty = 0 + WINDOW_TOP_BAR_HEIGHT;
@@ -100,7 +100,7 @@ window_bottom_bar_init()
     int type = WINDOW_BOTTOM_BAR;
 
     int h = WINDOW_BOTTOM_BAR_HEIGHT;
-    int w = get_n_by_perc(WINDOW_BASE_WIDTH, 100);
+    int w = WINDOW_BASE_WIDTH;
 
     int startx = 0;
     int starty = WINDOW_BASE_HEIGHT - h - 1;
@@ -145,7 +145,7 @@ window_init(int type)
             }
         default:
             {
-                fprintf(stderr, "Unknwon window type %d\n", type);
+                debug("Unknwon window type %d", type);
                 window.valid = FALSE;
             }
     }
@@ -159,6 +159,8 @@ window_editor_init(window_t *windows)
     int ret = 0;
 
     assert(WINDOW_TEXT_AREA_HEIGHT >= 0);
+    assert(WINDOW_BASE_LINES >= WINDOW_BASE_HEIGHT);
+    assert(WINDOW_BASE_COLS >= WINDOW_BASE_WIDTH);
 
     for (int i = 0; i < WINDOW_MAX; ++i)
     {
@@ -175,4 +177,5 @@ window_set_cursor(window_t *const window, int x, int y)
 {
     window->cursor_pos_x = x;
     window->cursor_pos_y = y;
+    debug("Set cursor at %d:%d, window %d", x, y, window->type);
 }

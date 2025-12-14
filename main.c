@@ -10,6 +10,9 @@ int main(int argc, char *argv[]) {
     const char help_str[] = "Usage:\
                          ./a.out <file_name>";
 
+    debug_init();
+    debug("Start text_editor");
+
     FILE *file;
     if (argc > 1)
     {
@@ -17,14 +20,14 @@ int main(int argc, char *argv[]) {
     }
     else
     {
-        fprintf(stderr, "Error: %s\n", help_str);
+        debug("Failed to run\n%s", help_str);
         return -1;
     }
 
 
     ncurse
     {
-        cbreak();
+        // cbreak();
         noecho();
         assert(has_colors() == TRUE);
         use_default_colors();
@@ -34,13 +37,13 @@ int main(int argc, char *argv[]) {
         editor_t editor = editor_init();
         if (editor.valid == FALSE)
         {
-            fprintf(stderr, "Failed to init editor\n");
+            debug("Failed to init text_editor");
         }
 
         render_t renderer = render_init(&editor);
         if (renderer.valid == FALSE)
         {
-            fprintf(stderr, "Failed to init renderer\n");
+            debug("Failed to init renderer");
         }
 
         render_editor(renderer);
@@ -75,7 +78,7 @@ int main(int argc, char *argv[]) {
                     }
                 default:
                     {
-                        // assert(0 == 1);
+                        debug("Get unknown ch %d at window TEXT_AREA", ch);
                     }
             }
             
@@ -84,6 +87,8 @@ int main(int argc, char *argv[]) {
         }
         // wgetch(editor.windows[WINDOW_TEXT_AREA].win);
     }
+
+    debug_close();
 
     return 0;
 }

@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <sys/types.h>
+#include "debug.h"
 
 #define _concat(a, b) a##b
 #define concat(a, b) _concat(a, b)

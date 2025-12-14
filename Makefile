@@ -46,6 +46,11 @@ endif
 $(BUILD_DIR)/%.o: $(TOP_DIR)/%.c
 	@mkdir -p $(BUILD_DIR)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c -o $@ $<
+
+ifdef CPP
+	$(CC) $(CPPFLAGS) $< -E -o $@.i
+endif
+
 ifdef PVS
 	$(CC) $(CPPFLAGS) $< -E -o $@.PVS-Studio.i
 endif
