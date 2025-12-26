@@ -13,7 +13,7 @@ SRC = $(wildcard $(TOP_DIR)/*.c)
 OBJ = $(patsubst $(TOP_DIR)/%.c,$(BUILD_DIR)/%.o,$(SRC))
 DEPS = $(patsubst $(TOP_DIR)/%.c,$(BUILD_DIR)/%.d,$(SRC))
 
-BEAR_OPTS=--output $(TOP_DIR)
+BEAR_OPTS=--output $(TOP_DIR)/compile_commands.json
 BEAR=bear $(BEAR_OPTS) --
 
 CC=clang
@@ -47,7 +47,8 @@ $(BUILD_DIR)/%.o: $(TOP_DIR)/%.c
 	@mkdir -p $(BUILD_DIR)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c -o $@ $<
 
-ifdef CPP
+ifeq ($(CPP), 1)
+	echo CPPPPPPPP
 	$(CC) $(CPPFLAGS) $< -E -o $@.i
 endif
 
