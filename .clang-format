@@ -237,7 +237,7 @@ SortJavaStaticImport: Before
 SortUsingDeclarations: LexicographicNumeric
 SpaceAfterCStyleCast: false
 SpaceAfterLogicalNot: false
-SpaceAfterOperatorKeyword: false
+SpaceAfterOperatorKeyword: true
 SpaceAfterTemplateKeyword: true
 SpaceAroundPointerQualifiers: Default
 SpaceBeforeAssignmentOperators: true
@@ -246,9 +246,9 @@ SpaceBeforeCpp11BracedList: false
 SpaceBeforeCtorInitializerColon: true
 SpaceBeforeInheritanceColon: true
 SpaceBeforeJsonColon: false
-SpaceBeforeParens: Never
+SpaceBeforeParens: Custom
 SpaceBeforeParensOptions:
-  AfterControlStatements: false
+  AfterControlStatements: true
   AfterForeachMacros: false
   AfterFunctionDefinitionName: false
   AfterFunctionDeclarationName: false
@@ -258,7 +258,7 @@ SpaceBeforeParensOptions:
   AfterPlacementOperator: false
   AfterRequiresInClause: false
   AfterRequiresInExpression: false
-  BeforeNonEmptyParentheses: false
+  BeforeNonEmptyParentheses: false 
 SpaceBeforeRangeBasedForLoopColon: true
 SpaceBeforeSquareBrackets: false
 SpaceInEmptyBlock: false
