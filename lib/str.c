@@ -310,50 +310,53 @@ string_compare(const string_t *str1, const string_t *str2)
 
 string_t** string_split(string_t *str, char_t sep)
 {
-    char_t *p_ch= str->buf;
-    size_t cnt = 0;
-    while ((p_ch = memchr(p_ch, sep, str->len - (p_ch - str->buf))))
+#define STRCHR_LOOP(p_ch, p_str, sep)                   \
+    for (p_ch = p_str->buf;                     \
+         (p_ch = memchr(p_ch, sep, p_str->len)) != NULL; ++p_ch)
+
+    size_t cnt = 1; // store NULL
+    char_t *p_ch;
+
+    // count last divided unchecked string part
+    if (memchr(str->buf, sep, str->len) != NULL)
     {
         ++cnt;
-        ++p_ch;
     }
 
-    string_t** ar = malloc(sizeof(*ar) * (cnt+1));
-    assert(ar != NULL);
-
-    size_t pos;
-    size_t len;
-    ssize_t prev_pos = -1;
-    size_t i = 0;
-    p_ch = str->buf;
-    string_t *tmp_string;
-    while ((p_ch = memchr(p_ch, sep, str->len - (p_ch - str->buf))))
+    STRCHR_LOOP(p_ch, str, sep)
     {
-        pos = p_ch - str->buf;
-        len = pos - prev_pos - 1;
-        tmp_string = string_new_len(str->buf + prev_pos + 1, len);
-        ar[i] = tmp_string;
-        prev_pos = pos;
-        ++p_ch;
-        ++i;
+        ++cnt;
     }
-    len = str->len - prev_pos;
-    tmp_string = string_new_len(str->buf + prev_pos + 1, len);
-    ar[i++] = tmp_string;
-    ar[i] = NULL;
 
-    return ar;
+    string_t **str_split_ar = malloc(sizeof(*str_split_ar) * cnt);
+    str_split_ar[cnt-1] = NULL;
+
+    size_t pos = 0;
+    ssize_t prev_pos = -1;
+    size_t id = 0;
+    STRCHR_LOOP(p_ch, str, sep)
+    {
+        size_t pos = p_ch - str->buf;
+        size_t chunk_len = pos - prev_pos - 1LL;
+        str_split_ar[id++] = string_new_len(str->buf + prev_pos + 1, chunk_len);
+        prev_pos = pos;
+        assert(id <= cnt-1);
+    }
+    str_split_ar[id] = string_new_len(str->buf + prev_pos + 1, str->len - prev_pos - 1LL);
+    
+    return str_split_ar;
+#undef STRCHR_LOOP
 }
 
 void string_split_free(string_t **ar)
 {
     string_t *tmp;
     size_t i = 0;
-    while ((tmp = ar[i]) != NULL)
+    while ((tmp = ar[i++]) != NULL)
     {
         string_free(tmp);
-        ++i;
     }
+    free(ar);
 }
 
 void
