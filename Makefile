@@ -1,35 +1,35 @@
 export TOP_DIR=$(shell pwd)
 export BUILD_DIR=$(TOP_DIR)/build
 
-PVS_CFG=./PVS-Studio.cfg
+PVS_CFG := ./PVS-Studio.cfg
 # csv, errorfile, fullhtml, html, tasklist, xml
-LOG_FORMAT=html
-PVS_LOG=./project.tasks
-PVS_LOG_OUT=./pvs.log
+LOG_FORMAT := html
+PVS_LOG := ./project.tasks
+PVS_LOG_OUT := ./pvs.log
 
-INCDIRS=.
+INCDIRS := .
 
-SRC = $(wildcard $(TOP_DIR)/*.c)
-OBJ = $(patsubst $(TOP_DIR)/%.c,$(BUILD_DIR)/%.o,$(SRC))
-DEPS = $(patsubst $(TOP_DIR)/%.c,$(BUILD_DIR)/%.d,$(SRC))
+SRC := $(wildcard $(TOP_DIR)/*.c)
+OBJ := $(patsubst $(TOP_DIR)/%.c,$(BUILD_DIR)/%.o,$(SRC))
+DEPS := $(patsubst $(TOP_DIR)/%.c,$(BUILD_DIR)/%.d,$(SRC))
 
-BEAR_OPTS=--output $(TOP_DIR)/compile_commands.json
-BEAR=bear $(BEAR_OPTS) --
+BEAR_OPTS :=--output $(TOP_DIR)/compile_commands.json
+BEAR := bear $(BEAR_OPTS) --
 
-CC=clang
+CC := clang
 
-LDLIBS=-lncurses
-LDFLAGS=-fuse-ld=mold
+LDLIBS := -lncurses
+LDFLAGS := -fuse-ld=mold
 
-DEPFLAGS=-MP -MD
-COMPILE_SANITY_OPTS=-Wall -Wextra
-CPPFLAGS=$(foreach D,$(INCDIRS),-I$(D))
-CFLAGS=-g $(DEPFLAGS)
+DEPFLAGS := -MP -MD
+COMPILE_SANITY_OPTS := -Wall -Wextra
+CPPFLAGS := $(foreach D,$(INCDIRS),-I$(D))
+CFLAGS := -g $(DEPFLAGS)
 
-FILE=$(TOP_DIR)/tmp
-ARGS=$(FILE)
+FILE := $(TOP_DIR)/tmp
+ARGS := $(FILE)
 
-PROGRAM=$(TOP_DIR)/text_editor
+PROGRAM := $(TOP_DIR)/text_editor
 
 all: $(PROGRAM)
 
@@ -48,7 +48,6 @@ $(BUILD_DIR)/%.o: $(TOP_DIR)/%.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c -o $@ $<
 
 ifeq ($(CPP), 1)
-	echo CPPPPPPPP
 	$(CC) $(CPPFLAGS) $< -E -o $@.i
 endif
 
