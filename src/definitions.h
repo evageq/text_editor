@@ -1,11 +1,11 @@
 #ifndef __DEFINITIONS__
 #define __DEFINITIONS__
 
-#include <limits.h>
-#include <stdio.h>
-#include <ncurses.h>
-#include <assert.h>
 #include "str.h"
+#include <assert.h>
+#include <limits.h>
+#include <ncurses.h>
+#include <stdio.h>
 
 #define LINE_BUFFER_LEN 4096
 #define FILE_NAME_LEN 4096
@@ -14,12 +14,14 @@
 #define TEXT_PTR_Y(t_ptr) (t_ptr.p_line->id)
 #define TEXT_PTR_IS_BOUND(t_ptr) (TEXT_PTR_X(t_ptr) + 1 >= t_ptr.p_str->len)
 
+#define MIN(a, b) (a < b ? a : b)
+
 extern WINDOW *top_win;
 extern WINDOW *text_win;
 extern WINDOW *bottom_win;
 
 extern char file_name_arg[];
-extern bool running; 
+extern bool running;
 
 typedef struct str_line_s
 {
@@ -29,15 +31,9 @@ typedef struct str_line_s
 
 } str_line_t;
 
-typedef struct text_pointer_s
-{
-    str_line_t *p_line;
-    size_t pos;
-
-} text_pointer_t;
-
 typedef struct cursor_s
 {
+    str_line_t *line;
     int x;
     int y;
 } cursor_t;
@@ -51,10 +47,10 @@ _Static_assert(EDITOR_COLORED_ENTITIES_MAX < 255, "ncurses colors max exceed");
 
 typedef enum editor_actions_e
 {
-    E_KEY_UP,
-    E_KEY_DOWN,
-    E_KEY_LEFT,
-    E_KEY_RIGHT,
+    E_KEY_UP = KEY_UP,
+    E_KEY_DOWN = KEY_DOWN,
+    E_KEY_LEFT = KEY_LEFT,
+    E_KEY_RIGHT = KEY_RIGHT,
     E_PASTE,
     E_COPY,
     E_NEXT_WORD,
@@ -65,9 +61,9 @@ typedef enum editor_actions_e
 
 typedef struct file_handle_s
 {
-    FILE* fd;
+    FILE *fd;
     string_t *path;
 
 } file_handle_t;
 
-#endif // __DEFINITIONS__
+#endif // __DEFINITIONS_

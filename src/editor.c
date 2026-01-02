@@ -64,6 +64,7 @@ load_file(const char *file)
     str_line_t *prev_line = NULL;
     while (fgets(g_line_buffer, sizeof(g_line_buffer), f))
     {
+        g_line_buffer[strlen(g_line_buffer)-1] = 0;
         tmp_line = malloc(sizeof(str_line_t));
         *tmp_line = (str_line_t){ .next = NULL,
                                   .prev = prev_line,
@@ -85,11 +86,19 @@ load_file(const char *file)
 }
 
 void
+draw_text_curs()
+{
+    wmove(g_text_win, g_curs.y, g_curs.x);
+}
+
+void
 draw()
 {
     draw_top_win();
     draw_text_win();
     draw_bottom_win();
+    draw_text_curs();
+    doupdate();
 }
 
 void
@@ -101,17 +110,13 @@ draw_top_win()
     werase(win);
     wbkgd(win, COLOR_PAIR(TITLE_BAR));
     wprintw(win, editor_banner);
-    wrefresh(win);
+    wnoutrefresh(win);
 }
 
-void draw_text_line(str_line_t *line)
+void
+draw_text_line(str_line_t *line)
 {
-    wprintw(g_text_win, "%s", line->p_str->buf);
-}
-
-void draw_text_curs()
-{
-    wmove(g_text_win, g_curs.y, g_curs.x);
+    wprintw(g_text_win, "%s\n", line->p_str->buf);
 }
 
 void
@@ -129,8 +134,7 @@ draw_text_win()
     }
     draw_text_line(end_line);
 
-    draw_text_curs();
-    wrefresh(win);
+    wnoutrefresh(win);
 }
 
 void
@@ -138,7 +142,7 @@ draw_bottom_win()
 {
     WINDOW *win = g_bottom_win;
     box(win, 0, 0);
-    wrefresh(win);
+    wnoutrefresh(win);
 }
 
 void
@@ -165,7 +169,7 @@ setup()
     load_file(g_file_name_arg);
     g_line_print_start = g_line_head;
 
-    g_curs.x = g_curs.y = 0;
+    g_curs = (cursor_t){ .x = 0, .y = 0, .line = g_line_print_start };
 
     g_running = TRUE;
 }
@@ -209,25 +213,94 @@ run()
     }
 }
 
+// static inline bool
+// is_curs_out_bound(int x, int y)
+// {
+//     str_line_t *tmp= get_first_print_line();
+//     if (x < 0)
+//     {
+//         return true;
+//     }
+//
+//
+// }
+
 void
-process_key(int ch)
+move_curs(int key)
 {
-    switch (ch)
+    assert(g_curs.line != NULL);
+    assert(g_curs.x >= 0);
+    assert(g_curs.y < g_text_win_lines);
+
+    switch (key)
     {
         case E_KEY_UP:
         {
+            if (g_curs.line->prev != NULL)
+            {
+                if (g_curs.y <= 0)
+                {
+                    g_line_print_start = g_curs.line->prev;
+                }
+                g_curs.line = g_curs.line->prev;
+
+                if (g_curs.y > 0)
+                {
+                    g_curs.y--;
+                }
+                g_curs.x = MIN(g_curs.x, g_curs.line->p_str->len);
+            }
             break;
         }
         case E_KEY_DOWN:
         {
+            if (g_curs.line->next != NULL)
+            {
+                if (g_curs.y + 1 < g_text_win_lines)
+                {
+                    g_curs.y++;
+                }
+                else
+                {
+                    g_line_print_start = g_line_print_start->next;
+                }
+                g_curs.line = g_curs.line->next;
+                // debug("%d %d\n", g_curs.x, g_curs.line->p_str->len);
+                g_curs.x = MIN(g_curs.x, g_curs.line->p_str->len);
+                
+            }
             break;
         }
         case E_KEY_LEFT:
         {
+            if (g_curs.x > 0)
+            {
+                g_curs.x--;
+            }
             break;
         }
         case E_KEY_RIGHT:
         {
+            if (g_curs.x + 1 <= g_curs.line->p_str->len)
+            {
+                g_curs.x++;
+            }
+            break;
+        }
+    }
+}
+
+void
+process_key(int key)
+{
+    switch (key)
+    {
+        case E_KEY_UP:
+        case E_KEY_DOWN:
+        case E_KEY_LEFT:
+        case E_KEY_RIGHT:
+        {
+            move_curs(key);
             break;
         }
         case E_PASTE:
@@ -252,7 +325,7 @@ process_key(int ch)
         }
         default: // this branch mean we're probably typing
         {
-            if (isprint(ch))
+            if (isprint(key))
             {
             }
         }
