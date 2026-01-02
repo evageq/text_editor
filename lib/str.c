@@ -60,10 +60,9 @@ string_new_sized(size_t len)
     string_t *str = malloc(sizeof(*str));
     if (str == NULL)
     {
-        exit(-1);
+        abort();
     }
-    // assert(str != NULL);
-    memset(str, 0, sizeof(*str));
+    *str = (string_t){};
     string_expand(str, MAX(len, 64));
     return str;
 }
@@ -94,7 +93,10 @@ string_expand(string_t *str, size_t len)
     }
 
     char_t *p_tmp_buf = realloc(str->buf, alloc);
-    assert(p_tmp_buf != NULL);
+    if (p_tmp_buf == NULL)
+    {
+        abort();
+    }
     str->buf = p_tmp_buf;
     str->alloc = alloc;
 
@@ -286,33 +288,82 @@ string_tolower(string_t *str)
     return str;
 }
 
+/* a < b */
 bool
 string_compare(const string_t *str1, const string_t *str2)
 {
-    if (str1->len == str2->len)
+    size_t n = MIN(str1->len, str2->len);
+
+    bool flag = true;
+    for (size_t i = 0; i < n; ++i)
     {
-        bool flag = true;
-        for (size_t i = 0; i < str1->len; ++i)
+        if (str1->buf[i] != str2->buf[i])
         {
-            flag &= str1->buf[i] <= str2->buf[i];
+            return str1->buf[i] < str2->buf[i];
         }
-        return flag;
     }
-    else if (str1->len < str2->len)
+
+    return false;
+}
+
+int
+string_compare_lexic(const string_t *str1, const string_t *str2)
+{
+    if (str1->len == str2->len && memcmp(str1->buf, str2->buf, str1->len) == 0)
     {
-        return true;
+        return STRING_COMPARE_EQUAL;
     }
     else
     {
-        return false;
+        if (string_compare(str1, str2) == true)
+        {
+            return STRING_COMPARE_TRUE;
+        }
+        else
+        {
+            return STRING_COMPARE_FALSE;
+        }
     }
 }
 
-string_t** string_split(string_t *str, char_t sep)
+string_t *
+string_erase(string_t *str, size_t start, ssize_t len)
 {
-#define STRCHR_LOOP(p_ch, p_str, sep)                   \
-    for (p_ch = p_str->buf;                     \
-         (p_ch = memchr(p_ch, sep, p_str->len)) != NULL; ++p_ch)
+    size_t end;
+
+    if (start >= str->len)
+    {
+        return str;
+    }
+
+    if (len <= 0 || start + len >= str->len)
+    {
+        end = str->len;
+    }
+    else
+    {
+        end = start + len;
+    }
+
+    assert(end <= str->len);
+
+    string_t *tmp = string_new(str->buf + end);
+    str->len = str->len - (end - start);
+    memcpy(str->buf + start, tmp->buf, tmp->len);
+    str->buf[str->len] = '\0';
+    string_free(tmp);
+
+    return str;
+}
+
+string_t **
+string_split(string_t *str, char_t sep)
+{
+#define STRCHR_LOOP(p_ch, p_str, sep)                                 \
+    for (p_ch = p_str->buf;                                           \
+         (p_ch = memchr(p_ch, sep, p_str->len - (p_ch - p_str->buf))) \
+         != NULL;                                                     \
+         ++p_ch)
 
     size_t cnt = 1; // store NULL
     char_t *p_ch;
@@ -329,7 +380,11 @@ string_t** string_split(string_t *str, char_t sep)
     }
 
     string_t **str_split_ar = malloc(sizeof(*str_split_ar) * cnt);
-    str_split_ar[cnt-1] = NULL;
+    if (str_split_ar == NULL)
+    {
+        abort();
+    }
+    str_split_ar[cnt - 1] = NULL;
 
     size_t pos = 0;
     ssize_t prev_pos = -1;
@@ -338,17 +393,20 @@ string_t** string_split(string_t *str, char_t sep)
     {
         size_t pos = p_ch - str->buf;
         size_t chunk_len = pos - prev_pos - 1LL;
-        str_split_ar[id++] = string_new_len(str->buf + prev_pos + 1, chunk_len);
+        str_split_ar[id++]
+            = string_new_len(str->buf + prev_pos + 1, chunk_len);
         prev_pos = pos;
-        assert(id <= cnt-1);
+        assert(id <= cnt - 1);
     }
-    str_split_ar[id] = string_new_len(str->buf + prev_pos + 1, str->len - prev_pos - 1LL);
-    
+    str_split_ar[id]
+        = string_new_len(str->buf + prev_pos + 1, str->len - prev_pos - 1LL);
+
     return str_split_ar;
 #undef STRCHR_LOOP
 }
 
-void string_split_free(string_t **ar)
+void
+string_split_free(string_t **ar)
 {
     string_t *tmp;
     size_t i = 0;

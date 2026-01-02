@@ -6,6 +6,7 @@
 #include <sys/types.h>
 
 #define MAX(a, b) (a < b ? b : a)
+#define MIN(a, b) (a < b ? a : b)
 #define MAX_SIZE ULONG_MAX
 
 typedef char char_t;
@@ -17,6 +18,13 @@ typedef struct string_s
     char_t *buf;
 
 } string_t;
+
+typedef enum string_compare_e
+{
+    STRING_COMPARE_EQUAL = 0,
+    STRING_COMPARE_TRUE = 1,
+    STRING_COMPARE_FALSE = -1
+} string_copmare_t;
 
 string_t *string_new(const char_t *s);
 string_t *string_new_len(const char_t *s, size_t len);
@@ -44,9 +52,10 @@ string_t *string_insert_string(string_t *dst, const string_t *src,
 string_t *string_insert_len(string_t *dst, const char_t *src, ssize_t pos,
                             ssize_t len);
 
-string_t *string_erase(string_t *str, size_t start, size_t len);
+string_t *string_erase(string_t *str, size_t start, ssize_t len);
 
 bool string_compare(const string_t *str1, const string_t *str2);
+int string_compare_lexic(const string_t *str1, const string_t *str2);
 
 string_t *string_append_char(string_t *dst, char_t src);
 string_t *string_append_cstring(string_t *dst, const char_t *src);
@@ -71,7 +80,7 @@ string_t *string_prepend_string(string_t *dst, const string_t *src);
         string_t *: string_prepend_string)(dst, src)
 string_t *string_prepend_len(string_t *str, const char_t *s, size_t len);
 
-string_t** string_split(string_t *str, char_t sep);
+string_t **string_split(string_t *str, char_t sep);
 void string_split_free(string_t **ar);
 
 void string_free(string_t *str);
