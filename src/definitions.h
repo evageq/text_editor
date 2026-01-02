@@ -7,8 +7,12 @@
 #include <assert.h>
 #include "str.h"
 
-#define BUFFER_LINES_MAX 4096
-#define FILE_NAME_LEN_MAX 4096
+#define LINE_BUFFER_LEN 4096
+#define FILE_NAME_LEN 4096
+
+#define TEXT_PTR_X(t_ptr) (t_ptr.pos)
+#define TEXT_PTR_Y(t_ptr) (t_ptr.p_line->id)
+#define TEXT_PTR_IS_BOUND(t_ptr) (TEXT_PTR_X(t_ptr) + 1 >= t_ptr.p_str->len)
 
 extern WINDOW *top_win;
 extern WINDOW *text_win;
@@ -17,11 +21,26 @@ extern WINDOW *bottom_win;
 extern char file_name_arg[];
 extern bool running; 
 
+typedef struct str_line_s
+{
+    string_t *p_str;
+    struct str_line_s *next;
+    struct str_line_s *prev;
+
+} str_line_t;
+
 typedef struct text_pointer_s
 {
-    size_t row;
-    size_t col;
+    str_line_t *p_line;
+    size_t pos;
+
 } text_pointer_t;
+
+typedef struct cursor_s
+{
+    int x;
+    int y;
+} cursor_t;
 
 typedef enum editor_colored_entities_e
 {
@@ -43,13 +62,6 @@ typedef enum editor_actions_e
     E_SAVE,
     E_MAX
 } editor_actions_t;
-
-typedef struct buffer_s
-{
-    text_pointer_t text_pointer;
-    string_t *lines[BUFFER_LINES_MAX];
-} buffer_t;
-
 
 typedef struct file_handle_s
 {
