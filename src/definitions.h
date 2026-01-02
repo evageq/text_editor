@@ -51,6 +51,7 @@ typedef enum editor_actions_e
     E_KEY_DOWN = KEY_DOWN,
     E_KEY_LEFT = KEY_LEFT,
     E_KEY_RIGHT = KEY_RIGHT,
+    E_DEL_CH = KEY_BACKSPACE,
     E_PASTE,
     E_COPY,
     E_NEXT_WORD,

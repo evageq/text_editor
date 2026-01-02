@@ -64,7 +64,7 @@ load_file(const char *file)
     str_line_t *prev_line = NULL;
     while (fgets(g_line_buffer, sizeof(g_line_buffer), f))
     {
-        g_line_buffer[strlen(g_line_buffer)-1] = 0;
+        g_line_buffer[strlen(g_line_buffer) - 1] = 0;
         tmp_line = malloc(sizeof(str_line_t));
         *tmp_line = (str_line_t){ .next = NULL,
                                   .prev = prev_line,
@@ -213,18 +213,6 @@ run()
     }
 }
 
-// static inline bool
-// is_curs_out_bound(int x, int y)
-// {
-//     str_line_t *tmp= get_first_print_line();
-//     if (x < 0)
-//     {
-//         return true;
-//     }
-//
-//
-// }
-
 void
 move_curs(int key)
 {
@@ -265,9 +253,7 @@ move_curs(int key)
                     g_line_print_start = g_line_print_start->next;
                 }
                 g_curs.line = g_curs.line->next;
-                // debug("%d %d\n", g_curs.x, g_curs.line->p_str->len);
                 g_curs.x = MIN(g_curs.x, g_curs.line->p_str->len);
-                
             }
             break;
         }
@@ -277,6 +263,23 @@ move_curs(int key)
             {
                 g_curs.x--;
             }
+            else
+            {
+                if (g_curs.line->prev != NULL)
+                {
+                    if (g_curs.y <= 0)
+                    {
+                        g_line_print_start = g_curs.line->prev;
+                    }
+                    g_curs.line = g_curs.line->prev;
+
+                    if (g_curs.y > 0)
+                    {
+                        g_curs.y--;
+                    }
+                    g_curs.x = g_curs.line->p_str->len;
+                }
+            }
             break;
         }
         case E_KEY_RIGHT:
@@ -285,9 +288,41 @@ move_curs(int key)
             {
                 g_curs.x++;
             }
+            else
+            {
+                if (g_curs.line->next != NULL)
+                {
+                    if (g_curs.y + 1 < g_text_win_lines)
+                    {
+                        g_curs.y++;
+                    }
+                    else
+                    {
+                        g_line_print_start = g_line_print_start->next;
+                    }
+                    g_curs.line = g_curs.line->next;
+                    g_curs.x = 0;
+                }
+            }
             break;
         }
     }
+}
+
+void del_char()
+{
+    if (g_curs.x > 0)
+    {
+        string_erase(g_curs.line->p_str, g_curs.x, 1);
+        move_curs(E_KEY_LEFT);
+    }
+}
+
+void
+type_char(char ch)
+{
+    string_insert(g_curs.line->p_str, ch, g_curs.x);
+    move_curs(E_KEY_RIGHT);
 }
 
 void
@@ -301,6 +336,11 @@ process_key(int key)
         case E_KEY_RIGHT:
         {
             move_curs(key);
+            break;
+        }
+        case E_DEL_CH:
+        {
+            del_char();
             break;
         }
         case E_PASTE:
@@ -327,6 +367,7 @@ process_key(int key)
         {
             if (isprint(key))
             {
+                type_char(key);
             }
         }
     }
