@@ -7,5 +7,5 @@ build/*
 project.tasks
 pvs.log.*
 
-text_editor
+editor
 
