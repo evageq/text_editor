@@ -554,21 +554,25 @@ process_key(int key)
 {
     switch (key)
     {
+        case E_VIM_KEY_UP:
         case E_KEY_UP:
         {
             move_curs_up();
             break;
         }
+        case E_VIM_KEY_DOWN:
         case E_KEY_DOWN:
         {
             move_curs_down();
             break;
         }
+        case E_VIM_KEY_LEFT:
         case E_KEY_LEFT:
         {
             move_curs_left();
             break;
         }
+        case E_VIM_KEY_RIGHT:
         case E_KEY_RIGHT:
         {
             move_curs_right();
