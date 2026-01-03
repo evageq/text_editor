@@ -10,11 +10,24 @@
 #define LINE_BUFFER_LEN 4096
 #define FILE_NAME_LEN 4096
 
-#define TEXT_PTR_X(t_ptr) (t_ptr.pos)
-#define TEXT_PTR_Y(t_ptr) (t_ptr.p_line->id)
-#define TEXT_PTR_IS_BOUND(t_ptr) (TEXT_PTR_X(t_ptr) + 1 >= t_ptr.p_str->len)
-
 #define MIN(a, b) (a < b ? a : b)
+
+#define DECR(x)     \
+    do              \
+    {               \
+        if (x > 0)  \
+        {           \
+            x -= 1; \
+        }           \
+    } while (0)
+#define INCR(x, upper_bound)     \
+    do                           \
+    {                            \
+        if (x + 1 < upper_bound) \
+        {                        \
+            x += 1;              \
+        }                        \
+    } while (0)
 
 extern WINDOW *top_win;
 extern WINDOW *text_win;

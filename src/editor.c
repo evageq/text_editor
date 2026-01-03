@@ -16,7 +16,6 @@ int g_text_win_lines;
 int g_bottom_win_lines;
 
 str_line_t *g_line_head;
-str_line_t *g_line_print_start;
 
 cursor_t g_curs;
 
@@ -28,8 +27,14 @@ bool g_running = FALSE;
 str_line_t *
 get_first_print_line()
 {
-    assert(g_line_print_start != NULL);
-    return g_line_print_start;
+    str_line_t *tmp = g_curs.line;
+    for (int i = g_curs.y; i > 0; --i)
+    {
+        assert(tmp->prev != NULL);
+        tmp = tmp->prev;
+    }
+
+    return tmp;
 }
 
 str_line_t *
@@ -167,9 +172,7 @@ setup()
     keypad(g_text_win, TRUE);
 
     load_file(g_file_name_arg);
-    g_line_print_start = g_line_head;
-
-    g_curs = (cursor_t){ .x = 0, .y = 0, .line = g_line_print_start };
+    g_curs = (cursor_t){ .x = 0, .y = 0, .line = g_line_head };
 
     g_running = TRUE;
 }
@@ -226,17 +229,13 @@ move_curs(int key)
         {
             if (g_curs.line->prev != NULL)
             {
-                if (g_curs.y <= 0)
-                {
-                    g_line_print_start = g_curs.line->prev;
-                }
                 g_curs.line = g_curs.line->prev;
-
-                if (g_curs.y > 0)
-                {
-                    g_curs.y--;
-                }
+                DECR(g_curs.y);
                 g_curs.x = MIN(g_curs.x, g_curs.line->p_str->len);
+            }
+            else
+            {
+                assert(g_curs.y == 0);
             }
             break;
         }
@@ -244,77 +243,76 @@ move_curs(int key)
         {
             if (g_curs.line->next != NULL)
             {
-                if (g_curs.y + 1 < g_text_win_lines)
-                {
-                    g_curs.y++;
-                }
-                else
-                {
-                    g_line_print_start = g_line_print_start->next;
-                }
                 g_curs.line = g_curs.line->next;
+                INCR(g_curs.y, g_text_win_lines);
                 g_curs.x = MIN(g_curs.x, g_curs.line->p_str->len);
             }
             break;
         }
         case E_KEY_LEFT:
         {
-            if (g_curs.x > 0)
-            {
-                g_curs.x--;
-            }
-            else
+            if (g_curs.x <= 0)
             {
                 if (g_curs.line->prev != NULL)
                 {
-                    if (g_curs.y <= 0)
-                    {
-                        g_line_print_start = g_curs.line->prev;
-                    }
                     g_curs.line = g_curs.line->prev;
-
-                    if (g_curs.y > 0)
-                    {
-                        g_curs.y--;
-                    }
                     g_curs.x = g_curs.line->p_str->len;
+                    DECR(g_curs.y);
                 }
+            }
+            else
+            {
+                DECR(g_curs.x);
             }
             break;
         }
         case E_KEY_RIGHT:
         {
-            if (g_curs.x + 1 <= g_curs.line->p_str->len)
-            {
-                g_curs.x++;
-            }
-            else
+            if (g_curs.x + 1 >= g_curs.line->p_str->len)
             {
                 if (g_curs.line->next != NULL)
                 {
-                    if (g_curs.y + 1 < g_text_win_lines)
-                    {
-                        g_curs.y++;
-                    }
-                    else
-                    {
-                        g_line_print_start = g_line_print_start->next;
-                    }
                     g_curs.line = g_curs.line->next;
                     g_curs.x = 0;
+                    INCR(g_curs.y, g_text_win_lines);
                 }
+            }
+            else
+            {
+                INCR(g_curs.x, g_curs.line->p_str->len + 1);
             }
             break;
         }
     }
 }
 
-void del_char()
+void
+del_str_line_node(str_line_t *node)
+{
+    if (node->prev != NULL)
+    {
+        node->prev->next = node->next;
+        if (node->next != NULL)
+        {
+            node->next->prev = node->prev;
+        }
+    }
+    free(node);
+}
+
+void
+del_char()
 {
     if (g_curs.x > 0)
     {
-        string_erase(g_curs.line->p_str, g_curs.x, 1);
+        string_erase(g_curs.line->p_str, g_curs.x - 1, 1);
         move_curs(E_KEY_LEFT);
+    }
+    else if (g_curs.line->prev != NULL)
+    {
+        move_curs(E_KEY_LEFT);
+        string_append(g_curs.line->p_str, g_curs.line->next->p_str);
+        del_str_line_node(g_curs.line->next);
     }
 }
 
@@ -324,6 +322,12 @@ type_char(char ch)
     string_insert(g_curs.line->p_str, ch, g_curs.x);
     move_curs(E_KEY_RIGHT);
 }
+
+// int
+// save_changes()
+// {
+//     for (str_line_t *line = g_line_head; )
+// }
 
 void
 process_key(int key)
@@ -361,6 +365,7 @@ process_key(int key)
         }
         case E_SAVE:
         {
+            // save_changes();
             break;
         }
         default: // this branch mean we're probably typing

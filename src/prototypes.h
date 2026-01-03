@@ -9,8 +9,7 @@ void draw_top_win();
 void draw_text_win();
 void draw_bottom_win();
 
-void load_file(const char* file);
+void load_file(const char *file);
 void process_key(int ch);
 
 void window_init();
-
