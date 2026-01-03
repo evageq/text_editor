@@ -12,22 +12,25 @@
 
 #define MIN(a, b) (a < b ? a : b)
 
-#define DECR(x)     \
-    do              \
-    {               \
-        if (x > 0)  \
-        {           \
-            x -= 1; \
-        }           \
+#define DECR_N(x, n) \
+do               \
+{                \
+    if (x >= n)  \
+    {            \
+        x -= n;  \
+    }            \
+} while (0)
+#define DECR(x) DECR_N(x, 1)
+
+#define INCR_N(x, n, upper_bound) \
+    do                            \
+    {                             \
+        if (x + n < upper_bound)  \
+        {                         \
+            x += n;               \
+        }                         \
     } while (0)
-#define INCR(x, upper_bound)     \
-    do                           \
-    {                            \
-        if (x + 1 < upper_bound) \
-        {                        \
-            x += 1;              \
-        }                        \
-    } while (0)
+#define INCR(x, upper_bound) INCR_N(x, 1, upper_bound)
 
 extern WINDOW *top_win;
 extern WINDOW *text_win;
@@ -58,6 +61,8 @@ typedef enum editor_colored_entities_e
 } editor_colored_entities_t;
 _Static_assert(EDITOR_COLORED_ENTITIES_MAX < 255, "ncurses colors max exceed");
 
+#define CTRL(c) ((c) & 037)
+
 typedef enum editor_actions_e
 {
     E_KEY_UP = KEY_UP,
@@ -69,7 +74,8 @@ typedef enum editor_actions_e
     E_COPY,
     E_NEXT_WORD,
     E_PREV_WORD,
-    E_SAVE,
+    E_SAVE = CTRL('s'),
+    E_EXIT = CTRL('x'),
     E_MAX
 } editor_actions_t;
 

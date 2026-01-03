@@ -19,10 +19,26 @@ str_line_t *g_line_head;
 
 cursor_t g_curs;
 
+bool is_modified = false;
+
 char g_line_buffer[LINE_BUFFER_LEN];
 char g_file_name_arg[FILE_NAME_LEN];
 
 bool g_running = FALSE;
+
+char *
+read_line(FILE *f)
+{
+
+    char *p = fgets(g_line_buffer, sizeof(g_line_buffer), f);
+
+    if (p != NULL)
+    {
+        p[strlen(p) - 1] = '\0';
+    }
+
+    return p;
+}
 
 str_line_t *
 get_first_print_line()
@@ -59,6 +75,65 @@ get_last_print_line()
     return tmp_line;
 }
 
+size_t
+get_in_file_len()
+{
+    size_t i = 0;
+    for (str_line_t *tmp_line = g_line_head; tmp_line != NULL;
+         tmp_line = tmp_line->next)
+    {
+        ++i;
+    }
+    return i;
+}
+
+size_t
+get_out_file_len()
+{
+    size_t i = 0;
+    FILE *f = fopen(g_file_name_arg, "r");
+
+    while (read_line(f))
+    {
+        ++i;
+    }
+
+    fclose(f);
+
+    return i;
+}
+
+bool
+cmp_changes()
+{
+
+    if (get_in_file_len() != get_out_file_len())
+    {
+        return true;
+    }
+
+    FILE *f = fopen(g_file_name_arg, "r");
+    str_line_t *tmp_in_line = g_line_head;
+    char *tmp_out_line = read_line(f);
+    size_t len = get_in_file_len();
+    for (size_t i = 0; i < len; ++i)
+    {
+        if (memcmp(tmp_in_line->p_str->buf, tmp_out_line,
+                   tmp_in_line->p_str->len)
+            != 0)
+        {
+            fclose(f);
+            return true;
+        }
+        tmp_in_line = tmp_in_line->next;
+        tmp_out_line = read_line(f);
+    }
+
+    fclose(f);
+
+    return false;
+}
+
 void
 load_file(const char *file)
 {
@@ -67,10 +142,9 @@ load_file(const char *file)
 
     str_line_t *tmp_line;
     str_line_t *prev_line = NULL;
-    while (fgets(g_line_buffer, sizeof(g_line_buffer), f))
+    while (read_line(f) != NULL)
     {
-        g_line_buffer[strlen(g_line_buffer) - 1] = 0;
-        tmp_line = malloc(sizeof(str_line_t));
+        tmp_line = malloc(sizeof(*tmp_line));
         *tmp_line = (str_line_t){ .next = NULL,
                                   .prev = prev_line,
                                   .p_str = string_new(g_line_buffer) };
@@ -110,11 +184,12 @@ void
 draw_top_win()
 {
     WINDOW *win = g_top_win;
-
+    bool is_modified = cmp_changes();
     const char editor_banner[] = "GNU nano clone";
     werase(win);
     wbkgd(win, COLOR_PAIR(TITLE_BAR));
-    wprintw(win, editor_banner);
+    wprintw(win, "%s %s", editor_banner,
+            (is_modified == true ? "Modified" : ""));
     wnoutrefresh(win);
 }
 
@@ -159,6 +234,8 @@ setup()
     start_color();
     cbreak();
     noecho();
+    nl();
+    raw();
     if (has_colors() == FALSE)
     {
         debug("Terminal doesn't support colors");
@@ -217,76 +294,6 @@ run()
 }
 
 void
-move_curs(int key)
-{
-    assert(g_curs.line != NULL);
-    assert(g_curs.x >= 0);
-    assert(g_curs.y < g_text_win_lines);
-
-    switch (key)
-    {
-        case E_KEY_UP:
-        {
-            if (g_curs.line->prev != NULL)
-            {
-                g_curs.line = g_curs.line->prev;
-                DECR(g_curs.y);
-                g_curs.x = MIN(g_curs.x, g_curs.line->p_str->len);
-            }
-            else
-            {
-                assert(g_curs.y == 0);
-            }
-            break;
-        }
-        case E_KEY_DOWN:
-        {
-            if (g_curs.line->next != NULL)
-            {
-                g_curs.line = g_curs.line->next;
-                INCR(g_curs.y, g_text_win_lines);
-                g_curs.x = MIN(g_curs.x, g_curs.line->p_str->len);
-            }
-            break;
-        }
-        case E_KEY_LEFT:
-        {
-            if (g_curs.x <= 0)
-            {
-                if (g_curs.line->prev != NULL)
-                {
-                    g_curs.line = g_curs.line->prev;
-                    g_curs.x = g_curs.line->p_str->len;
-                    DECR(g_curs.y);
-                }
-            }
-            else
-            {
-                DECR(g_curs.x);
-            }
-            break;
-        }
-        case E_KEY_RIGHT:
-        {
-            if (g_curs.x + 1 >= g_curs.line->p_str->len)
-            {
-                if (g_curs.line->next != NULL)
-                {
-                    g_curs.line = g_curs.line->next;
-                    g_curs.x = 0;
-                    INCR(g_curs.y, g_text_win_lines);
-                }
-            }
-            else
-            {
-                INCR(g_curs.x, g_curs.line->p_str->len + 1);
-            }
-            break;
-        }
-    }
-}
-
-void
 del_str_line_node(str_line_t *node)
 {
     if (node->prev != NULL)
@@ -306,28 +313,166 @@ del_char()
     if (g_curs.x > 0)
     {
         string_erase(g_curs.line->p_str, g_curs.x - 1, 1);
-        move_curs(E_KEY_LEFT);
+        move_curs_left();
     }
     else if (g_curs.line->prev != NULL)
     {
-        move_curs(E_KEY_LEFT);
+        move_curs_left();
         string_append(g_curs.line->p_str, g_curs.line->next->p_str);
         del_str_line_node(g_curs.line->next);
     }
 }
 
-void
-type_char(char ch)
+str_line_t *
+create_str_line_node(str_line_t *node)
 {
-    string_insert(g_curs.line->p_str, ch, g_curs.x);
-    move_curs(E_KEY_RIGHT);
+    str_line_t *tmp = malloc(sizeof(*tmp));
+
+    tmp->next = node->next;
+    tmp->prev = node;
+
+    node->next->prev = tmp;
+    node->next = tmp;
+
+    return tmp;
 }
 
-// int
-// save_changes()
-// {
-//     for (str_line_t *line = g_line_head; )
-// }
+void
+paste_new_line()
+{
+    str_line_t *line = create_str_line_node(g_curs.line);
+    line->p_str = string_new_len(g_curs.line->p_str->buf + g_curs.x,
+                                 g_curs.line->p_str->len - g_curs.x);
+    string_erase(line->prev->p_str, g_curs.x, -1);
+}
+
+void
+paste_print_char(char ch)
+{
+    string_insert(g_curs.line->p_str, ch, g_curs.x);
+    move_curs_right();
+}
+
+void
+save_changes()
+{
+    str_line_t *tmp = g_line_head;
+    FILE *f = fopen(g_file_name_arg, "w");
+
+    while (tmp != NULL)
+    {
+        fputs(tmp->p_str->buf, f);
+        fputs("\n", f);
+        tmp = tmp->next;
+    }
+
+    fclose(f);
+}
+
+void
+move_curs_up()
+{
+    if (g_curs.line->prev != NULL)
+    {
+        g_curs.line = g_curs.line->prev;
+        DECR(g_curs.y);
+        g_curs.x = MIN(g_curs.x, g_curs.line->p_str->len);
+    }
+    else
+    {
+        assert(g_curs.y == 0);
+    }
+}
+
+void
+move_curs_down()
+{
+    if (g_curs.line->next != NULL)
+    {
+        g_curs.line = g_curs.line->next;
+        INCR(g_curs.y, g_text_win_lines);
+        g_curs.x = MIN(g_curs.x, g_curs.line->p_str->len);
+    }
+}
+
+void
+move_curs_left()
+{
+    if (g_curs.x <= 0)
+    {
+        if (g_curs.line->prev != NULL)
+        {
+            g_curs.line = g_curs.line->prev;
+            g_curs.x = g_curs.line->p_str->len;
+            DECR(g_curs.y);
+        }
+    }
+    else
+    {
+        DECR(g_curs.x);
+    }
+}
+
+void
+move_curs_right()
+{
+    if (g_curs.x + 1 >= g_curs.line->p_str->len)
+    {
+        if (g_curs.line->next != NULL)
+        {
+            g_curs.line = g_curs.line->next;
+            g_curs.x = 0;
+            INCR(g_curs.y, g_text_win_lines);
+        }
+    }
+    else
+    {
+        INCR(g_curs.x, g_curs.line->p_str->len + 1);
+    }
+}
+
+void
+move_curse_n_up(int n)
+{
+    for (int i = 0; i < n; ++i)
+    {
+        move_curs_up();
+    }
+}
+
+void
+move_curse_down(int n)
+{
+    for (int i = 0; i < n; ++i)
+    {
+        move_curs_down();
+    }
+}
+
+void
+move_curse_left(int n)
+{
+    for (int i = 0; i < n; ++i)
+    {
+        move_curs_left();
+    }
+}
+
+void
+move_curse_right(int n)
+{
+    for (int i = 0; i < n; ++i)
+    {
+        move_curs_right();
+    }
+}
+
+void
+die()
+{
+    cleanup();
+    exit(0);
+}
 
 void
 process_key(int key)
@@ -335,11 +480,23 @@ process_key(int key)
     switch (key)
     {
         case E_KEY_UP:
+        {
+            move_curs_up();
+            break;
+        }
         case E_KEY_DOWN:
+        {
+            move_curs_down();
+            break;
+        }
         case E_KEY_LEFT:
+        {
+            move_curs_left();
+            break;
+        }
         case E_KEY_RIGHT:
         {
-            move_curs(key);
+            move_curs_right();
             break;
         }
         case E_DEL_CH:
@@ -365,14 +522,24 @@ process_key(int key)
         }
         case E_SAVE:
         {
-            // save_changes();
+            save_changes();
+            break;
+        }
+        case E_EXIT:
+        {
+            die();
             break;
         }
         default: // this branch mean we're probably typing
         {
+            debug("key %d", key);
             if (isprint(key))
             {
-                type_char(key);
+                paste_print_char(key);
+            }
+            if (key == '\n')
+            {
+                paste_new_line();
             }
         }
     }
