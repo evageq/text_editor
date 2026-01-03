@@ -401,6 +401,69 @@ save_changes()
     fclose(f);
 }
 
+bool
+is_ch_word_separator(char ch)
+{
+    switch (ch)
+    {
+        case ' ':
+        case '\0':
+        {
+            return true;
+        }
+        default:
+            return false;
+    }
+}
+
+static inline int what_ch_under_curs()
+{
+    return g_curs.line->p_str->buf[g_curs.x];
+}
+
+
+void
+move_next_word()
+{
+    cursor_t prev_curs = g_curs;
+    int state = is_ch_word_separator(what_ch_under_curs());
+    int prev_state = state;
+    while (1)
+    {
+        switch (state)
+        {
+            case false:
+            {
+                if (state != prev_state)
+                {
+                    return;
+                }
+                break;
+            }
+            case true:
+            {
+                break;
+            }
+        }
+
+        move_curs_right();
+        if (prev_curs.x == g_curs.x && prev_curs.y == g_curs.y
+            || prev_curs.y != g_curs.y)
+        {
+            break;
+        }
+        prev_curs = g_curs;
+
+        prev_state = state;
+        state = is_ch_word_separator(what_ch_under_curs());
+    }
+}
+
+void
+move_back_word()
+{
+}
+
 void
 move_curs_up()
 {
@@ -578,6 +641,12 @@ process_key(int key)
             move_curs_right();
             break;
         }
+        case E_NEXT_WORD:
+        {
+            debug("next keyword");
+            move_next_word();
+            break;
+        }
         case E_DEL_CH:
         {
             del_char();
@@ -588,14 +657,6 @@ process_key(int key)
             break;
         }
         case E_COPY:
-        {
-            break;
-        }
-        case E_NEXT_WORD:
-        {
-            break;
-        }
-        case E_PREV_WORD:
         {
             break;
         }
@@ -637,7 +698,6 @@ process_key(int key)
         }
         default: // this branch mean we're probably typing
         {
-            debug("key %d", key);
             if (isprint(key))
             {
                 paste_print_char(key);

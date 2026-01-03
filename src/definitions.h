@@ -63,6 +63,12 @@ _Static_assert(EDITOR_COLORED_ENTITIES_MAX < 255, "ncurses colors max exceed");
 
 #define CTRL(c) ((c) & 037)
 
+enum
+{
+    CURS_IN_NON_WORD,
+    CURS_IN_WORD,
+};
+
 typedef enum editor_actions_e
 {
     E_KEY_UP = KEY_UP,
@@ -73,11 +79,11 @@ typedef enum editor_actions_e
     E_VIM_KEY_DOWN = CTRL('j'),
     E_VIM_KEY_LEFT = CTRL('h'),
     E_VIM_KEY_RIGHT = CTRL('l'),
+    E_NEXT_WORD = 575,
+    E_BACK_WORD = 560,
     E_DEL_CH = KEY_BACKSPACE,
     E_PASTE,
     E_COPY,
-    E_NEXT_WORD,
-    E_PREV_WORD,
     E_SAVE = CTRL('s'),
     E_EXIT = CTRL('x'),
     E_MAX
