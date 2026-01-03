@@ -462,6 +462,38 @@ move_next_word()
 void
 move_back_word()
 {
+    cursor_t prev_curs = g_curs;
+    int state = is_ch_word_separator(what_ch_under_curs());
+    int prev_state = state;
+    while (1)
+    {
+        switch (state)
+        {
+            case false:
+            {
+                if (state != prev_state)
+                {
+                    return;
+                }
+                break;
+            }
+            case true:
+            {
+                break;
+            }
+        }
+
+        move_curs_left();
+        if (prev_curs.x == g_curs.x && prev_curs.y == g_curs.y
+            || prev_curs.y != g_curs.y)
+        {
+            break;
+        }
+        prev_curs = g_curs;
+
+        prev_state = state;
+        state = is_ch_word_separator(what_ch_under_curs());
+    }
 }
 
 void
@@ -643,8 +675,12 @@ process_key(int key)
         }
         case E_NEXT_WORD:
         {
-            debug("next keyword");
             move_next_word();
+            break;
+        }
+        case E_BACK_WORD:
+        {
+            move_back_word();
             break;
         }
         case E_DEL_CH:
