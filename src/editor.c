@@ -304,6 +304,7 @@ del_str_line_node(str_line_t *node)
             node->next->prev = node->prev;
         }
     }
+    string_free(node->p_str);
     free(node);
 }
 
@@ -331,7 +332,10 @@ create_str_line_node(str_line_t *node)
     tmp->next = node->next;
     tmp->prev = node;
 
-    node->next->prev = tmp;
+    if (node->next != NULL)
+    {
+        node->next->prev = tmp;
+    }
     node->next = tmp;
 
     return tmp;
@@ -344,6 +348,8 @@ paste_new_line()
     line->p_str = string_new_len(g_curs.line->p_str->buf + g_curs.x,
                                  g_curs.line->p_str->len - g_curs.x);
     string_erase(line->prev->p_str, g_curs.x, -1);
+    move_curs_down();
+    move_curs_to_left();
 }
 
 void
@@ -416,7 +422,7 @@ move_curs_left()
 void
 move_curs_right()
 {
-    if (g_curs.x + 1 >= g_curs.line->p_str->len)
+    if (g_curs.x + 1 > g_curs.line->p_str->len)
     {
         if (g_curs.line->next != NULL)
         {
@@ -432,7 +438,7 @@ move_curs_right()
 }
 
 void
-move_curse_n_up(int n)
+move_curs_n_up(int n)
 {
     for (int i = 0; i < n; ++i)
     {
@@ -441,7 +447,7 @@ move_curse_n_up(int n)
 }
 
 void
-move_curse_down(int n)
+move_curs_n_down(int n)
 {
     for (int i = 0; i < n; ++i)
     {
@@ -450,7 +456,25 @@ move_curse_down(int n)
 }
 
 void
-move_curse_left(int n)
+move_curs_to_left()
+{
+    while (g_curs.x > 0)
+    {
+        move_curs_left();
+    }
+}
+
+void
+move_cursor_to_right()
+{
+    while (g_curs.y != g_curs.line->p_str->len)
+    {
+        move_curs_right();
+    }
+}
+
+void
+move_curs_n_left(int n)
 {
     for (int i = 0; i < n; ++i)
     {
@@ -459,7 +483,7 @@ move_curse_left(int n)
 }
 
 void
-move_curse_right(int n)
+move_curs_n_right(int n)
 {
     for (int i = 0; i < n; ++i)
     {

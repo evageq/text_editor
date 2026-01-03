@@ -44,6 +44,7 @@ string_new_len(const char_t *const s, size_t len)
     if (s == NULL || *s == '\0' || len == 0)
     {
         str = string_new_sized(2);
+        str->buf[0] = '\0';
     }
     else
     {
@@ -331,11 +332,6 @@ string_erase(string_t *str, size_t start, ssize_t len)
 {
     size_t end;
 
-    if (start >= str->len)
-    {
-        return str;
-    }
-
     if (len <= 0 || start + len >= str->len)
     {
         end = str->len;
@@ -343,6 +339,11 @@ string_erase(string_t *str, size_t start, ssize_t len)
     else
     {
         end = start + len;
+    }
+
+    if (start >= str->len || end - start <= 0)
+    {
+        return str;
     }
 
     assert(end <= str->len);

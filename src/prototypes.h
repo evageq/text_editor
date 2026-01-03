@@ -21,5 +21,6 @@ void move_curs_n_up(int n);
 void move_curs_n_down(int n);
 void move_curs_n_left(int n);
 void move_curs_n_right(int n);
+void move_curs_to_left();
 
 void window_init();
