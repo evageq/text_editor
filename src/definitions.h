@@ -13,13 +13,13 @@
 #define MIN(a, b) (a < b ? a : b)
 
 #define DECR_N(x, n) \
-do               \
-{                \
-    if (x >= n)  \
-    {            \
-        x -= n;  \
-    }            \
-} while (0)
+    do               \
+    {                \
+        if (x >= n)  \
+        {            \
+            x -= n;  \
+        }            \
+    } while (0)
 #define DECR(x) DECR_N(x, 1)
 
 #define INCR_N(x, n, upper_bound) \
@@ -78,6 +78,13 @@ typedef enum editor_actions_e
     E_EXIT = CTRL('x'),
     E_MAX
 } editor_actions_t;
+
+typedef enum editor_save_choice_e
+{
+    SAVE_Y_CHOICE,
+    SAVE_N_CHOICE,
+    SAVE_CANCEL_CHOICE,
+} editor_save_choise_t;
 
 typedef struct file_handle_s
 {

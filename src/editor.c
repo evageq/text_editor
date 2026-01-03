@@ -15,6 +15,8 @@ int g_top_win_lines;
 int g_text_win_lines;
 int g_bottom_win_lines;
 
+bool g_prompt_to_save = FALSE;
+
 str_line_t *g_line_head;
 
 cursor_t g_curs;
@@ -184,12 +186,13 @@ void
 draw_top_win()
 {
     WINDOW *win = g_top_win;
-    bool is_modified = cmp_changes();
     const char editor_banner[] = "GNU nano clone";
     werase(win);
     wbkgd(win, COLOR_PAIR(TITLE_BAR));
-    wprintw(win, "%s %s", editor_banner,
-            (is_modified == true ? "Modified" : ""));
+    mvwprintw(win, 0, 0, "%s", editor_banner);
+    mvwprintw(win, 0, COLS / 2, "%s", g_file_name_arg);
+    mvwprintw(win, 0, COLS - sizeof("Modified"), "%s",
+              is_modified ? "Modified" : "");
     wnoutrefresh(win);
 }
 
@@ -221,7 +224,29 @@ void
 draw_bottom_win()
 {
     WINDOW *win = g_bottom_win;
-    box(win, 0, 0);
+    werase(win);
+    leaveok(win, TRUE);
+    if (g_prompt_to_save == true)
+    {
+        wattron(win, COLOR_PAIR(TITLE_BAR));
+        assert(g_bottom_win_lines >= 3);
+        mvwprintw(win, 0, 0, "Save modified buffer?");
+        mvwprintw(win, 1, 0, " Y");
+        mvwprintw(win, 2, 0, " N");
+        mvwprintw(win, 2, MIN(16, COLS), "^C");
+        wattroff(win, COLOR_PAIR(TITLE_BAR));
+
+        mvwprintw(win, 1, 4, "Yes");
+        mvwprintw(win, 2, 4, "No");
+        mvwprintw(win, 2, MIN(16, COLS) + 3, "Cancel");
+    }
+    else
+    {
+        wattron(win, COLOR_PAIR(TITLE_BAR));
+        mvwprintw(win, 0, 0, "^X");
+        wattroff(win, COLOR_PAIR(TITLE_BAR));
+        mvwprintw(win, 0, sizeof("^X "), "Exit");
+    }
     wnoutrefresh(win);
 }
 
@@ -290,6 +315,7 @@ run()
         int ch;
         ch = wgetch(g_text_win);
         process_key(ch);
+        is_modified = cmp_changes();
     }
 }
 
@@ -491,6 +517,31 @@ move_curs_n_right(int n)
     }
 }
 
+int
+prompt_to_save()
+{
+    g_prompt_to_save = true;
+    draw_bottom_win();
+    wrefresh(g_bottom_win);
+    g_prompt_to_save = false;
+    while (1)
+    {
+        char ch = wgetch(g_bottom_win);
+        if (ch == 'y' || ch == 'Y')
+        {
+            return SAVE_Y_CHOICE;
+        }
+        if (ch == 'n' || ch == 'N')
+        {
+            return SAVE_N_CHOICE;
+        }
+        if (ch == CTRL('c'))
+        {
+            return SAVE_CANCEL_CHOICE;
+        }
+    }
+}
+
 void
 die()
 {
@@ -551,7 +602,33 @@ process_key(int key)
         }
         case E_EXIT:
         {
-            die();
+            if (cmp_changes() == true)
+            {
+                int choice = prompt_to_save();
+                switch (choice)
+                {
+                    case SAVE_Y_CHOICE:
+                    {
+                        save_changes();
+                        die();
+                        break;
+                    }
+                    case SAVE_N_CHOICE:
+                    {
+                        die();
+                        break;
+                    }
+                    case SAVE_CANCEL_CHOICE:
+                    default:
+                    {
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                die();
+            }
             break;
         }
         default: // this branch mean we're probably typing
